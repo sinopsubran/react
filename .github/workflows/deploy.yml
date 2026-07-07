@@ -17,7 +17,6 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install Dependencies
         run: npm install
@@ -27,11 +26,8 @@ jobs:
 
       - name: Verify Build
         run: |
-          echo "Current Directory"
           pwd
-          echo "Files"
           ls -la
-          echo "Build Folder"
           ls -la build
 
       - name: Copy Build Folder to GCP VM
@@ -66,4 +62,3 @@ jobs:
           script: |
             echo "Deployment Successful"
             ls -la /var/www/html
-            sudo systemctl status nginx --no-pager
