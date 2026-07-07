@@ -1,39 +1,45 @@
-name: CI
+ame: Build and Deploy React to GCP VM
 
 on:
   push:
     branches:
       - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: 20
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm install
 
-      - name: Run TypeScript checks
+      - name: Build React App
         run: npm run build
 
-      - name: Run Vite build
-        run: npm run build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+      - name: Copy dist to GCP VM
+        uses: appleboy/scp-action@v0.1.7
         with:
-          name: dist
-          path: dist
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "dist/*"
+          target: "/tmp/react"
+
+      - name: Deploy to Nginx
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            sudo rm -rf /var/www/html/*
+            sudo cp -r /tmp/react/dist/* /var/www/html/
+            sudo systemctl restart nginx
